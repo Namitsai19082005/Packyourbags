@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}{{ package.title }} - Pack Your Bags{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Package Images -->
+            <div id="packageImages" class="mb-4">
+                <!-- Images will be loaded here -->
+            </div>
+            
+            <!-- Package Details -->
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title">{{ package.title }}</h1>
+                    <p class="text-muted mb-3">{{ package.destination }}</p>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-calendar-alt fa-2x text-primary mb-2"></i>
+                                <h5>{{ package.duration_days }} Days</h5>
+                                <small class="text-muted">Duration</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                <h5>{{ package.max_travelers }}</h5>
+                                <small class="text-muted">Max Travelers</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                                <h5 id="averageRating">{{ package.average_rating or 0 }}</h5>
+                                <small class="text-muted">Rating</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-rupee-sign fa-2x text-info mb-2"></i>
+                                <h5>₹{{ package.price }}</h5>
+                                <small class="text-muted">Per Person</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4>Description</h4>
+                    <p>{{ package.description or 'No description available' }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>What's Included</h5>
+                            <ul id="includesList" class="list-group list-group-flush">
+                                <!-- Includes will be loaded here -->
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>What's Not Included</h5>
+                            <ul id="excludesList" class="list-group list-group-flush">
+                                <!-- Excludes will be loaded here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviews Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Reviews & Ratings</h5>
+                </div>
+                <div class="card-body">
+                    <div id="reviewsContainer">
+                        <!-- Reviews will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Booking Card -->
+            <div class="card sticky-top">
+                <div class="card-body">
+                    <h4 class="card-title">Book This Package</h4>
+                    <div class="mb-3">
+                        <label for="bookingDate" class="form-label">Travel Date</label>
+                        <input type="date" class="form-control" id="bookingDate" min="{{ package.available_from }}" max="{{ package.available_to }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="travelers" class="form-label">Number of Travelers</label>
+                        <select class="form-select" id="travelers">
+                            <!-- Options will be generated -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="specialRequests" class="form-label">Special Requests (Optional)</label>
+                        <textarea class="form-control" id="specialRequests" rows="3" placeholder="Any special requirements..."></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-lg" onclick="bookPackage()" id="bookBtn">
+                            Book Now - ₹<span id="totalPrice">{{ package.price }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const packageId = {{ package.id }};
+    const packagePrice = {{ package.price }};
+    const maxTravelers = {{ package.max_travelers }};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPackageImages();
+        loadIncludesExcludes();
+        loadReviews();
+        setupBookingForm();
+    });
+    
+    function loadPackageImages() {
+        const images = {{ package.images | safe }};
+        const container = document.getElementById('packageImages');
+        
+        if (images && images.length > 0) {
+            container.innerHTML = `
+                <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        ${images.map((img, index) => `
+                            <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                                <img src="${img}" class="d-block w-100" style="height: 400px; object-fit: cover;" alt="Package Image">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <div class="text-center">
+                        <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No images available</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    function loadIncludesExcludes() {
+        const includes = {{ package.includes | safe }};
+        const excludes = {{ package.excludes | safe }};
+        
+        const includesList = document.getElementById('includesList');
+        const excludesList = document.getElementById('excludesList');
+        
+        if (includes && includes.length > 0) {
+            includesList.innerHTML = includes.map(item => `<li class="list-group-item"><i class="fas fa-check text-success me-2"></i>${item}</li>`).join('');
+        } else {
+            includesList.innerHTML = '<li class="list-group-item text-muted">No information available</li>';
+        }
+        
+        if (excludes && excludes.length > 0) {
+            excludesList.innerHTML = excludes.map(item => `<li class="list-group-item"><i class="fas fa-times text-danger me-2"></i>${item}</li>`).join('');
+        } else {
+            excludesList.innerHTML = '<li class="list-group-item text-muted">No information available</li>';
+        }
+    }
+    
+    async function loadReviews() {
+        try {
+            const response = await fetch(`/api/reviews/package/${packageId}`);
+            const data = await response.json();
+            
+            const container = document.getElementById('reviewsContainer');
+            const averageRating = document.getElementById('averageRating');
+            
+            averageRating.textContent = data.average_rating.toFixed(1);
+            
+            if (data.reviews && data.reviews.length > 0) {
+                container.innerHTML = data.reviews.map(review => `
+                    <div class="review-card card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title">${review.user.username}</h6>
+                                    <div class="rating mb-2">
+                                        ${generateStars(review.rating)}
+                                    </div>
+                                </div>
+                                <small class="text-muted">${new Date(review.created_at).toLocaleDateString()}</small>
+                            </div>
+                            <p class="card-text">${review.comment || 'No comment provided'}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-muted">No reviews yet. Be the first to review this package!</p>';
+            }
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+        }
+    }
+    
+    function setupBookingForm() {
+        const travelersSelect = document.getElementById('travelers');
+        
+        // Generate traveler options
+        for (let i = 1; i <= maxTravelers; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i + (i === 1 ? ' Traveler' : ' Travelers');
+            travelersSelect.appendChild(option);
+        }
+        
+        // Update total price when travelers change
+        travelersSelect.addEventListener('change', updateTotalPrice);
+    }
+    
+    function updateTotalPrice() {
+        const travelers = document.getElementById('travelers').value;
+        const totalPrice = packagePrice * travelers;
+        document.getElementById('totalPrice').textContent = totalPrice;
+    }
+    
+    function generateStars(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars += '<i class="fas fa-star text-warning"></i>';
+            } else if (i - 0.5 <= rating) {
+                stars += '<i class="fas fa-star-half-alt text-warning"></i>';
+            } else {
+                stars += '<i class="far fa-star text-warning"></i>';
+            }
+        }
+        return stars;
+    }
+    
+    async function bookPackage() {
+        if (!authToken) {
+            showAlert('Please login to book a package', 'warning');
+            showLoginModal();
+            return;
+        }
+        
+        const bookingDate = document.getElementById('bookingDate').value;
+        const travelers = document.getElementById('travelers').value;
+        const specialRequests = document.getElementById('specialRequests').value;
+        
+        if (!bookingDate) {
+            showAlert('Please select a travel date', 'warning');
+            return;
+        }
+        
+        const bookBtn = document.getElementById('bookBtn');
+        bookBtn.disabled = true;
+        bookBtn.textContent = 'Booking...';
+        
+        try {
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    package_id: packageId,
+                    booking_date: bookingDate,
+                    number_of_travelers: parseInt(travelers),
+                    special_requests: specialRequests
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Booking created successfully! Redirecting to payment...', 'success');
+                setTimeout(() => {
+                    window.location.href = `/booking/${data.booking.id}`;
+                }, 2000);
+            } else {
+                showAlert(data.error || 'Booking failed', 'danger');
+            }
+        } catch (error) {
+            console.error('Booking error:', error);
+            showAlert('Booking failed', 'danger');
+        } finally {
+            bookBtn.disabled = false;
+            bookBtn.textContent = `Book Now - ₹${document.getElementById('totalPrice').textContent}`;
+        }
+    }
+</script>
+{% endblock %}

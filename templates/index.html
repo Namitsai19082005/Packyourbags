@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Pack Your Bags - Home{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section id="home" class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-4">Explore the World with Us</h1>
+        <p class="lead mb-4">Discover amazing travel packages and create unforgettable memories</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="input-group input-group-lg">
+                    <input type="text" class="form-control" placeholder="Search destinations..." id="searchInput">
+                    <button class="btn btn-primary" type="button" onclick="searchPackages()">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Packages Section -->
+<section id="packages" class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Travel Packages</h2>
+        <div class="row" id="packagesContainer">
+            <!-- Packages will be loaded here -->
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary" onclick="loadMorePackages()">Load More</button>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h2>About Pack Your Bags</h2>
+                <p class="lead">We are your trusted partner in creating memorable travel experiences. Our platform connects travelers with amazing destinations and provides seamless booking experiences.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-primary me-2"></i> Expert travel planning</li>
+                    <li><i class="fas fa-check text-primary me-2"></i> 24/7 customer support</li>
+                    <li><i class="fas fa-check text-primary me-2"></i> Best price guarantee</li>
+                    <li><i class="fas fa-check text-primary me-2"></i> Secure payment processing</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <div class="row">
+                    <div class="col-6 text-center mb-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                        <h4 class="mt-2">1000+</h4>
+                        <p>Happy Travelers</p>
+                    </div>
+                    <div class="col-6 text-center mb-4">
+                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-map-marker-alt fa-2x"></i>
+                        </div>
+                        <h4 class="mt-2">50+</h4>
+                        <p>Destinations</p>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                        <h4 class="mt-2">4.8</h4>
+                        <p>Average Rating</p>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-calendar fa-2x"></i>
+                        </div>
+                        <h4 class="mt-2">365</h4>
+                        <p>Days Available</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+
+    // Load packages on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPackages();
+    });
+
+    async function loadPackages() {
+        try {
+            const response = await fetch(`/api/packages?page=${currentPage}&per_page=6`);
+            const data = await response.json();
+            
+            const container = document.getElementById('packagesContainer');
+            
+            if (currentPage === 1) {
+                container.innerHTML = '';
+            }
+            
+            data.packages.forEach(package => {
+                const packageCard = createPackageCard(package);
+                container.appendChild(packageCard);
+            });
+            
+            if (data.packages.length < 6) {
+                document.querySelector('.btn-outline-primary').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error loading packages:', error);
+            showAlert('Error loading packages', 'danger');
+        }
+    }
+
+    function createPackageCard(package) {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-4';
+        
+        col.innerHTML = `
+            <div class="card package-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">${package.title}</h5>
+                    <p class="card-text text-muted">${package.destination}</p>
+                    <p class="card-text">${package.description || 'No description available'}</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary">${package.duration_days} days</span>
+                        <span class="badge bg-success">₹${package.price}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Max ${package.max_travelers} travelers</small>
+                        <div class="rating">
+                            ${generateStars(package.average_rating || 0)}
+                            <small class="text-muted">(${package.total_reviews || 0})</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary w-100" onclick="viewPackage(${package.id})">
+                        View Details
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        return col;
+    }
+
+    function generateStars(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars += '<i class="fas fa-star text-warning"></i>';
+            } else if (i - 0.5 <= rating) {
+                stars += '<i class="fas fa-star-half-alt text-warning"></i>';
+            } else {
+                stars += '<i class="far fa-star text-warning"></i>';
+            }
+        }
+        return stars;
+    }
+
+    function loadMorePackages() {
+        currentPage++;
+        loadPackages();
+    }
+
+    function searchPackages() {
+        const searchTerm = document.getElementById('searchInput').value;
+        if (searchTerm) {
+            window.location.href = `/packages?search=${encodeURIComponent(searchTerm)}`;
+        }
+    }
+
+    function viewPackage(packageId) {
+        window.location.href = `/package/${packageId}`;
+    }
+</script>
+{% endblock %}

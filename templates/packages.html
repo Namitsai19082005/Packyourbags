@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Travel Packages - Pack Your Bags{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Filters Sidebar -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Filter Packages</h5>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm">
+                        <div class="mb-3">
+                            <label for="destination" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="destination" placeholder="Search destination">
+                        </div>
+                        <div class="mb-3">
+                            <label for="minPrice" class="form-label">Min Price (₹)</label>
+                            <input type="number" class="form-control" id="minPrice" placeholder="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="maxPrice" class="form-label">Max Price (₹)</label>
+                            <input type="number" class="form-control" id="maxPrice" placeholder="10000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="duration" class="form-label">Duration (days)</label>
+                            <select class="form-select" id="duration">
+                                <option value="">Any</option>
+                                <option value="1">1-3 days</option>
+                                <option value="4">4-7 days</option>
+                                <option value="8">8+ days</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                        <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="clearFilters()">Clear</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Packages Grid -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Travel Packages</h2>
+                <div class="d-flex gap-2">
+                    <select class="form-select" id="sortBy" onchange="loadPackages()">
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="duration_asc">Duration: Short to Long</option>
+                        <option value="duration_desc">Duration: Long to Short</option>
+                        <option value="rating_desc">Rating: High to Low</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row" id="packagesContainer">
+                <!-- Packages will be loaded here -->
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-primary" id="loadMoreBtn" onclick="loadMorePackages()" style="display: none;">Load More</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = true;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPackages();
+        
+        // Filter form submission
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            loadPackages();
+        });
+    });
+
+    async function loadPackages() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = 'Loading...';
+        
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                per_page: 9
+            });
+            
+            // Add filters
+            const destination = document.getElementById('destination').value;
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const duration = document.getElementById('duration').value;
+            
+            if (destination) params.append('destination', destination);
+            if (minPrice) params.append('min_price', minPrice);
+            if (maxPrice) params.append('max_price', maxPrice);
+            if (duration) params.append('duration', duration);
+            
+            const response = await fetch(`/api/packages?${params}`);
+            const data = await response.json();
+            
+            const container = document.getElementById('packagesContainer');
+            
+            if (currentPage === 1) {
+                container.innerHTML = '';
+            }
+            
+            data.packages.forEach(package => {
+                const packageCard = createPackageCard(package);
+                container.appendChild(packageCard);
+            });
+            
+            hasMore = data.packages.length === 9;
+            loadMoreBtn.style.display = hasMore ? 'block' : 'none';
+            
+        } catch (error) {
+            console.error('Error loading packages:', error);
+            showAlert('Error loading packages', 'danger');
+        } finally {
+            isLoading = false;
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.textContent = 'Load More';
+        }
+    }
+
+    function createPackageCard(package) {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-4';
+        
+        col.innerHTML = `
+            <div class="card package-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">${package.title}</h5>
+                    <p class="card-text text-muted">${package.destination}</p>
+                    <p class="card-text">${package.description || 'No description available'}</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary">${package.duration_days} days</span>
+                        <span class="badge bg-success">₹${package.price}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Max ${package.max_travelers} travelers</small>
+                        <div class="rating">
+                            ${generateStars(package.average_rating || 0)}
+                            <small class="text-muted">(${package.total_reviews || 0})</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary w-100" onclick="viewPackage(${package.id})">
+                        View Details
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        return col;
+    }
+
+    function generateStars(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars += '<i class="fas fa-star text-warning"></i>';
+            } else if (i - 0.5 <= rating) {
+                stars += '<i class="fas fa-star-half-alt text-warning"></i>';
+            } else {
+                stars += '<i class="far fa-star text-warning"></i>';
+            }
+        }
+        return stars;
+    }
+
+    function loadMorePackages() {
+        if (hasMore && !isLoading) {
+            currentPage++;
+            loadPackages();
+        }
+    }
+
+    function viewPackage(packageId) {
+        window.location.href = `/package/${packageId}`;
+    }
+
+    function clearFilters() {
+        document.getElementById('filterForm').reset();
+        currentPage = 1;
+        loadPackages();
+    }
+</script>
+{% endblock %}

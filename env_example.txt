@@ -1,0 +1,14 @@
+# Database Configuration
+MYSQL_PASSWORD=Harsha@9625
+
+# JWT Configuration
+SECRET_KEY=your-secret-key-change-in-production
+JWT_SECRET_KEY=jwt-secret-string-change-in-production
+
+# Email Configuration
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-key-secret
