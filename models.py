@@ -80,6 +80,31 @@ class TravelPackage(db.Model):
     reviews = db.relationship('Review', backref='package', lazy=True)
     
     def to_dict(self):
+        import json
+        
+        # Parse JSON strings for includes, excludes, and images
+        includes = []
+        excludes = []
+        images = []
+        
+        if self.includes:
+            try:
+                includes = json.loads(self.includes)
+            except (json.JSONDecodeError, TypeError):
+                includes = []
+        
+        if self.excludes:
+            try:
+                excludes = json.loads(self.excludes)
+            except (json.JSONDecodeError, TypeError):
+                excludes = []
+        
+        if self.images:
+            try:
+                images = json.loads(self.images)
+            except (json.JSONDecodeError, TypeError):
+                images = []
+        
         return {
             'id': self.id,
             'title': self.title,
@@ -90,9 +115,9 @@ class TravelPackage(db.Model):
             'max_travelers': self.max_travelers,
             'available_from': self.available_from.isoformat(),
             'available_to': self.available_to.isoformat(),
-            'includes': self.includes,
-            'excludes': self.excludes,
-            'images': self.images,
+            'includes': includes,
+            'excludes': excludes,
+            'images': images,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()

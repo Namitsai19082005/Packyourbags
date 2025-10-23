@@ -45,6 +45,7 @@ from routes.auth import auth_bp
 from routes.packages import packages_bp
 from routes.bookings import bookings_bp
 from routes.reviews import reviews_bp
+from routes.itineraries import itineraries_bp
 from routes.admin import admin_bp
 from routes.payments import payments_bp
 from routes.wishlist import wishlist_bp
@@ -54,6 +55,7 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(packages_bp, url_prefix='/api/packages')
 app.register_blueprint(bookings_bp, url_prefix='/api/bookings')
 app.register_blueprint(reviews_bp, url_prefix='/api/reviews')
+app.register_blueprint(itineraries_bp, url_prefix='/api/itineraries')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(payments_bp, url_prefix='/api/payments')
 app.register_blueprint(wishlist_bp, url_prefix='/api/wishlist')

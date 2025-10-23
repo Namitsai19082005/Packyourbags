@@ -31,9 +31,12 @@
                 <a href="#reviews" class="list-group-item list-group-item-action" onclick="showProfileSection('reviews')">
                     <i class="fas fa-star me-2"></i>My Reviews
                 </a>
-                <a href="#wishlist" class="list-group-item list-group-item-action" onclick="showProfileSection('wishlist')">
-                    <i class="fas fa-heart me-2"></i>My Wishlist
-                </a>
+            <a href="#wishlist" class="list-group-item list-group-item-action" onclick="showProfileSection('wishlist')">
+                <i class="fas fa-heart me-2"></i>My Wishlist
+            </a>
+            <a href="#itineraries" class="list-group-item list-group-item-action" onclick="showProfileSection('itineraries')">
+                <i class="fas fa-route me-2"></i>My Itineraries
+            </a>
                 <a href="#password" class="list-group-item list-group-item-action" onclick="showProfileSection('password')">
                     <i class="fas fa-lock me-2"></i>Change Password
                 </a>
@@ -139,6 +142,19 @@
                 </div>
             </div>
             
+            <div id="itineraries-section" class="section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-route me-2"></i>My Itineraries</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="itinerariesContainer">
+                            <!-- Itineraries will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Change Password Section -->
             <div id="password-section" class="section" style="display: none;">
                 <div class="card">
@@ -209,6 +225,9 @@
                 break;
             case 'wishlist':
                 loadUserWishlist();
+                break;
+            case 'itineraries':
+                loadUserItineraries();
                 break;
             case 'password':
                 // Password form is already loaded
@@ -624,6 +643,90 @@
             } catch (error) {
                 showAlert('Failed to remove from wishlist', 'danger');
             }
+        }
+    }
+    
+    async function loadUserItineraries() {
+        try {
+            const response = await fetch('/api/bookings/', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                const bookings = data.bookings;
+                const container = document.getElementById('itinerariesContainer');
+                
+                if (bookings.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No bookings found. Book a package to create itineraries!</p>';
+                    return;
+                }
+                
+                // Group itineraries by booking
+                let itinerariesHtml = '';
+                for (const booking of bookings) {
+                    try {
+                        const itineraryResponse = await fetch(`/api/itineraries/booking/${booking.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`
+                            }
+                        });
+                        
+                        const itineraryData = await itineraryResponse.json();
+                        if (itineraryData.success && itineraryData.itineraries.length > 0) {
+                            itinerariesHtml += `
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h5>${booking.package.title} - ${booking.package.destination}</h5>
+                                        <small class="text-muted">Booking ID: ${booking.id} | ${booking.booking_date}</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            ${itineraryData.itineraries.map(day => `
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h6>Day ${day.day_number}: ${day.title}</h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <p>${day.description || 'No description available'}</p>
+                                                            ${day.accommodation ? `<p><strong>Accommodation:</strong> ${day.accommodation}</p>` : ''}
+                                                            ${day.meals ? `<p><strong>Meals:</strong> ${day.meals}</p>` : ''}
+                                                            ${day.activities ? `
+                                                                <div>
+                                                                    <strong>Activities:</strong>
+                                                                    <ul>
+                                                                        ${JSON.parse(day.activities).map(activity => `<li>${activity}</li>`).join('')}
+                                                                    </ul>
+                                                                </div>
+                                                            ` : ''}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } catch (error) {
+                        console.error('Error loading itineraries for booking:', booking.id, error);
+                    }
+                }
+                
+                if (itinerariesHtml === '') {
+                    container.innerHTML = '<p class="text-muted">No itineraries found. Create itineraries for your bookings!</p>';
+                } else {
+                    container.innerHTML = itinerariesHtml;
+                }
+            } else {
+                showAlert(data.error || 'Failed to load itineraries', 'danger');
+            }
+        } catch (error) {
+            console.error('Error loading itineraries:', error);
+            showAlert('Failed to load itineraries', 'danger');
         }
     }
 </script>

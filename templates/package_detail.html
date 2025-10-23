@@ -293,6 +293,9 @@
         displayIncludes(package.includes || []);
         displayExcludes(package.excludes || []);
         
+        // Update package highlights
+        displayPackageHighlights(package);
+        
         // Load reviews
         loadPackageReviews();
     }
@@ -358,6 +361,25 @@
         } else {
             container.innerHTML = '<li class="list-group-item text-muted">No information available</li>';
         }
+    }
+    
+    function displayPackageHighlights(package) {
+        const container = document.getElementById('packageHighlights');
+        
+        // Create highlights based on package data
+        const highlights = [
+            `Explore ${package.destination}`,
+            `${package.duration_days} days of adventure`,
+            `Up to ${package.max_travelers} travelers`,
+            `From ₹${package.price} per person`,
+            `Available ${new Date(package.available_from).toLocaleDateString()} - ${new Date(package.available_to).toLocaleDateString()}`
+        ];
+        
+        container.innerHTML = highlights.map(highlight => `
+            <li class="mb-2">
+                <i class="fas fa-check text-primary me-2"></i>${highlight}
+            </li>
+        `).join('');
     }
     
     async function loadPackageReviews() {
