@@ -47,6 +47,7 @@ from routes.bookings import bookings_bp
 from routes.reviews import reviews_bp
 from routes.admin import admin_bp
 from routes.payments import payments_bp
+from routes.wishlist import wishlist_bp
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -55,10 +56,55 @@ app.register_blueprint(bookings_bp, url_prefix='/api/bookings')
 app.register_blueprint(reviews_bp, url_prefix='/api/reviews')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 app.register_blueprint(payments_bp, url_prefix='/api/payments')
+app.register_blueprint(wishlist_bp, url_prefix='/api/wishlist')
 
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+@app.route('/register')
+def register_page():
+    return render_template('register.html')
+
+@app.route('/packages')
+def packages_page():
+    return render_template('packages.html')
+
+@app.route('/bookings')
+def bookings_page():
+    return render_template('bookings.html')
+
+@app.route('/profile')
+def profile_page():
+    return render_template('profile.html')
+
+@app.route('/admin')
+def admin_page():
+    return render_template('admin.html')
+
+@app.route('/about')
+def about_page():
+    return render_template('about.html')
+
+@app.route('/admin-profile')
+def admin_profile_page():
+    return render_template('admin_dashboard.html')
+
+@app.route('/admin-profile-page')
+def admin_profile_page_new():
+    return render_template('admin_profile.html')
+
+@app.route('/package/<int:package_id>')
+def package_detail_page(package_id):
+    return render_template('package_detail.html')
+
+@app.route('/wishlist')
+def wishlist_page():
+    return render_template('wishlist.html')
 
 @app.route('/api/health')
 def health_check():

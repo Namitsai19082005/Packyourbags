@@ -104,11 +104,13 @@
             const minPrice = document.getElementById('minPrice').value;
             const maxPrice = document.getElementById('maxPrice').value;
             const duration = document.getElementById('duration').value;
+            const sortBy = document.getElementById('sortBy').value;
             
             if (destination) params.append('destination', destination);
             if (minPrice) params.append('min_price', minPrice);
             if (maxPrice) params.append('max_price', maxPrice);
             if (duration) params.append('duration', duration);
+            if (sortBy) params.append('sort_by', sortBy);
             
             const response = await fetch(`/api/packages?${params}`);
             const data = await response.json();

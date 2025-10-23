@@ -209,3 +209,23 @@ class Itinerary(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+
+class Wishlist(db.Model):
+    __tablename__ = 'wishlist'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    package_id = db.Column(db.Integer, db.ForeignKey('travel_packages.id'), nullable=False)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='wishlist_items')
+    package = db.relationship('TravelPackage', backref='wishlist_items')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'package_id': self.package_id,
+            'added_at': self.added_at.isoformat()
+        }

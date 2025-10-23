@@ -89,26 +89,29 @@ def package_detail(package_id):
     except Exception as e:
         return f"Error loading package: {str(e)}", 500
 
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+@app.route('/register')
+def register_page():
+    return render_template('register.html')
+
 @app.route('/admin')
-@jwt_required()
 def admin_panel():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    
-    if not user or user.role != UserRole.ADMIN:
-        return "Access denied", 403
-    
-    return render_template('admin.html', current_user=user)
+    return render_template('admin_dashboard.html')
 
 @app.route('/bookings')
-@jwt_required()
 def bookings():
     return render_template('bookings.html')
 
 @app.route('/profile')
-@jwt_required()
 def profile():
     return render_template('profile.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
 @app.route('/api/health')
 def health_check():

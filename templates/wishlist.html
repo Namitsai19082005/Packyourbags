@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist - Pack Your Bags{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-heart text-danger me-2"></i>My Wishlist
+            </h2>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading your wishlist...</p>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="fas fa-heart-broken text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-muted">Your wishlist is empty</h4>
+                <p class="text-muted">Start adding packages to your wishlist to save them for later!</p>
+                <a href="/packages" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Browse Packages
+                </a>
+            </div>
+            
+            <!-- Wishlist Items -->
+            <div id="wishlistContainer" class="row">
+                <!-- Wishlist items will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadWishlist();
+});
+
+async function loadWishlist() {
+    const loadingState = document.getElementById('loadingState');
+    const emptyState = document.getElementById('emptyState');
+    const wishlistContainer = document.getElementById('wishlistContainer');
+    
+    loadingState.style.display = 'block';
+    emptyState.style.display = 'none';
+    wishlistContainer.innerHTML = '';
+    
+    try {
+        const response = await fetch('/api/wishlist/', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        loadingState.style.display = 'none';
+        
+        if (data.wishlist && data.wishlist.length > 0) {
+            displayWishlistItems(data.wishlist);
+        } else {
+            emptyState.style.display = 'block';
+        }
+    } catch (error) {
+        loadingState.style.display = 'none';
+        showAlert('Failed to load wishlist', 'danger');
+    }
+}
+
+function displayWishlistItems(wishlistItems) {
+    const container = document.getElementById('wishlistContainer');
+    
+    container.innerHTML = wishlistItems.map(item => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-img-top" style="height: 200px; background: linear-gradient(45deg, #007bff, #0056b3); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">${item.package.title}</h5>
+                    <p class="card-text text-muted">${item.package.destination}</p>
+                    <div class="mb-3">
+                        <span class="badge bg-primary">${item.package.duration_days} days</span>
+                        <span class="badge bg-success">₹${item.package.price}</span>
+                    </div>
+                    <p class="card-text flex-grow-1">${item.package.description || 'No description available'}</p>
+                    <div class="mt-auto">
+                        <div class="d-flex gap-2">
+                            <a href="/package/${item.package.id}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            <button class="btn btn-danger btn-sm" onclick="removeFromWishlist(${item.package.id})">
+                                <i class="fas fa-heart-broken me-1"></i>Remove
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Added on ${new Date(item.added_at).toLocaleDateString()}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function removeFromWishlist(packageId) {
+    if (confirm('Are you sure you want to remove this item from your wishlist?')) {
+        try {
+            const response = await fetch(`/api/wishlist/${packageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showAlert('Removed from wishlist', 'success');
+                loadWishlist(); // Reload the wishlist
+            } else {
+                showAlert(data.message || 'Failed to remove from wishlist', 'danger');
+            }
+        } catch (error) {
+            showAlert('Failed to remove from wishlist', 'danger');
+        }
+    }
+}
+</script>
+{% endblock %}

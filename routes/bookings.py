@@ -125,7 +125,10 @@ def get_booking(booking_id):
         if booking.user_id != user_id and user.role not in [UserRole.ADMIN, UserRole.TRAVEL_AGENT]:
             return jsonify({'error': 'Access denied'}), 403
         
-        return jsonify({'booking': booking.to_dict()}), 200
+        return jsonify({
+            'success': True,
+            'booking': booking.to_dict()
+        }), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

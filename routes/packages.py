@@ -18,6 +18,7 @@ def get_packages():
         duration = request.args.get('duration', type=int)
         available_from = request.args.get('available_from')
         available_to = request.args.get('available_to')
+        sort_by = request.args.get('sort_by', '')
         
         # Build query
         query = TravelPackage.query.filter_by(is_active=True)
@@ -47,6 +48,21 @@ def get_packages():
                 query = query.filter(TravelPackage.available_to >= to_date)
             except ValueError:
                 return jsonify({'error': 'Invalid available_to date format. Use YYYY-MM-DD'}), 400
+        
+        # Apply sorting
+        if sort_by:
+            if sort_by == 'price_asc':
+                query = query.order_by(TravelPackage.price.asc())
+            elif sort_by == 'price_desc':
+                query = query.order_by(TravelPackage.price.desc())
+            elif sort_by == 'duration_asc':
+                query = query.order_by(TravelPackage.duration_days.asc())
+            elif sort_by == 'duration_desc':
+                query = query.order_by(TravelPackage.duration_days.desc())
+            elif sort_by == 'rating_desc':
+                # For rating sorting, we'll need to join with reviews and calculate average
+                # For now, we'll sort by creation date as a fallback
+                query = query.order_by(TravelPackage.created_at.desc())
         
         # Paginate results
         packages = query.paginate(
@@ -103,7 +119,10 @@ def get_package(package_id):
             package_dict['total_reviews'] = 0
             package_dict['reviews'] = []
         
-        return jsonify({'package': package_dict}), 200
+        return jsonify({
+            'success': True,
+            'package': package_dict
+        }), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -239,8 +258,8 @@ def delete_package(package_id):
         if not package:
             return jsonify({'error': 'Package not found'}), 404
         
-        # Soft delete by setting is_active to False
-        package.is_active = False
+        # Hard delete - remove from database
+        db.session.delete(package)
         db.session.commit()
         
         return jsonify({'message': 'Package deleted successfully'}), 200

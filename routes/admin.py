@@ -71,7 +71,7 @@ def get_user(user_id):
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
-        return jsonify({'user': user.to_dict()}), 200
+        return jsonify({'success': True, 'user': user.to_dict()}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -114,9 +114,13 @@ def update_user(user_id):
         if 'is_active' in data:
             user.is_active = data['is_active']
         
+        if 'password' in data and data['password']:
+            user.set_password(data['password'])
+        
         db.session.commit()
         
         return jsonify({
+            'success': True,
             'message': 'User updated successfully',
             'user': user.to_dict()
         }), 200
@@ -156,6 +160,105 @@ def activate_user(user_id):
         db.session.commit()
         
         return jsonify({'message': 'User activated successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users', methods=['POST'])
+@jwt_required()
+@admin_required
+def create_user():
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['username', 'email', 'password', 'role']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'{field} is required'}), 400
+        
+        # Check if username already exists
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({'error': 'Username already exists'}), 400
+        
+        # Check if email already exists
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already exists'}), 400
+        
+        # Create new user
+        user = User(
+            username=data['username'],
+            email=data['email'],
+            phone_number=data.get('phone_number'),
+            role=UserRole(data['role']),
+            is_active=data.get('is_active', True)
+        )
+        user.set_password(data['password'])
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'User created successfully',
+            'user': user.to_dict()
+        }), 201
+        
+    except ValueError as e:
+        return jsonify({'error': 'Invalid role'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+@admin_required
+def delete_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Prevent deleting the current admin user
+        current_user_id = get_jwt_identity()
+        if user.id == current_user_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 400
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'User deleted successfully'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users/<int:user_id>/toggle-status', methods=['PUT'])
+@jwt_required()
+@admin_required
+def toggle_user_status(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Prevent deactivating the current admin user
+        current_user_id = get_jwt_identity()
+        if user.id == current_user_id:
+            return jsonify({'error': 'Cannot deactivate your own account'}), 400
+        
+        user.is_active = not user.is_active
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'User {"activated" if user.is_active else "deactivated"} successfully',
+            'user': user.to_dict()
+        }), 200
         
     except Exception as e:
         db.session.rollback()
@@ -240,6 +343,23 @@ def get_all_bookings():
             'pages': bookings.pages,
             'current_page': page,
             'per_page': per_page
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/bookings/<int:booking_id>', methods=['GET'])
+@jwt_required()
+@admin_required
+def get_booking_details(booking_id):
+    try:
+        booking = Booking.query.get(booking_id)
+        if not booking:
+            return jsonify({'error': 'Booking not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'booking': booking.to_dict()
         }), 200
         
     except Exception as e:

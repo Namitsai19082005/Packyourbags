@@ -1,0 +1,630 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Pack Your Bags{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Profile Sidebar -->
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 id="profileUsername">Loading...</h5>
+                    <p class="text-muted" id="profileEmail">Loading...</p>
+                    <span class="badge bg-primary" id="profileRole">Loading...</span>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="list-group mt-3">
+                <a href="#profile" class="list-group-item list-group-item-action active" onclick="showProfileSection('profile')">
+                    <i class="fas fa-user me-2"></i>Profile Details
+                </a>
+                <a href="#bookings" class="list-group-item list-group-item-action" onclick="showProfileSection('bookings')">
+                    <i class="fas fa-calendar-check me-2"></i>My Bookings
+                </a>
+                <a href="#reviews" class="list-group-item list-group-item-action" onclick="showProfileSection('reviews')">
+                    <i class="fas fa-star me-2"></i>My Reviews
+                </a>
+                <a href="#wishlist" class="list-group-item list-group-item-action" onclick="showProfileSection('wishlist')">
+                    <i class="fas fa-heart me-2"></i>My Wishlist
+                </a>
+                <a href="#password" class="list-group-item list-group-item-action" onclick="showProfileSection('password')">
+                    <i class="fas fa-lock me-2"></i>Change Password
+                </a>
+            </div>
+            
+            <!-- Logout Button at Bottom -->
+            <div class="mt-3">
+                <button class="btn btn-outline-danger w-100" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Profile Details Section -->
+            <div id="profile-section" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Profile Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="profileForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="role" class="form-label">Role</label>
+                                    <input type="text" class="form-control" id="role" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="joinedDate" class="form-label">Member Since</label>
+                                    <input type="text" class="form-control" id="joinedDate" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <input type="text" class="form-control" id="status" readonly>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bookings Section -->
+            <div id="bookings-section" class="section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>My Bookings</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="bookingsContainer">
+                            <!-- Bookings will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviews Section -->
+            <div id="reviews-section" class="section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>My Reviews</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="reviewsContainer">
+                            <!-- Reviews will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Wishlist Section -->
+            <div id="wishlist-section" class="section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>My Wishlist</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="wishlistContainer">
+                            <!-- Wishlist items will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Change Password Section -->
+            <div id="password-section" class="section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Change Password</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="passwordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" required>
+                                <div class="form-text">Password must be at least 6 characters long</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-lock me-2"></i>Change Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUserProfile();
+    });
+    
+    function showProfileSection(sectionName) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        
+        // Show selected section
+        document.getElementById(sectionName + '-section').style.display = 'block';
+        
+        // Update active nav item
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Load section data
+        switch(sectionName) {
+            case 'profile':
+                loadUserProfile();
+                break;
+            case 'bookings':
+                loadUserBookings();
+                break;
+            case 'reviews':
+                loadUserReviews();
+                break;
+            case 'wishlist':
+                loadUserWishlist();
+                break;
+            case 'password':
+                // Password form is already loaded
+                break;
+        }
+    }
+    
+    async function loadUserProfile() {
+        try {
+            const response = await fetch('/api/auth/profile', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const user = data.user;
+                
+                // Update sidebar
+                document.getElementById('profileUsername').textContent = user.username;
+                document.getElementById('profileEmail').textContent = user.email;
+                document.getElementById('profileRole').textContent = user.role;
+                
+                // Update form
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                document.getElementById('phone').value = user.phone_number || '';
+                document.getElementById('role').value = user.role;
+                document.getElementById('joinedDate').value = new Date(user.created_at).toLocaleDateString();
+                document.getElementById('status').value = user.is_active ? 'Active' : 'Inactive';
+            } else {
+                showAlert('Failed to load profile', 'danger');
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            showAlert('Failed to load profile', 'danger');
+        }
+    }
+    
+    async function loadUserBookings() {
+        try {
+            const response = await fetch('/api/bookings', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const container = document.getElementById('bookingsContainer');
+                
+                if (data.bookings && data.bookings.length > 0) {
+                    container.innerHTML = data.bookings.map(booking => `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5>${booking.package.title}</h5>
+                                        <p class="text-muted">${booking.package.destination}</p>
+                                        <p><strong>Travel Date:</strong> ${new Date(booking.booking_date).toLocaleDateString()}</p>
+                                        <p><strong>Travelers:</strong> ${booking.number_of_travelers}</p>
+                                        <p><strong>Total Amount:</strong> ₹${booking.total_amount}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="badge bg-${getStatusColor(booking.status)} fs-6">${booking.status}</span>
+                                        <br><br>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewBooking(${booking.id})">View Details</button>
+                                        ${booking.status === 'pending' ? `<button class="btn btn-outline-danger btn-sm ms-2" onclick="cancelBooking(${booking.id})">Cancel</button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-muted">No bookings found</p>';
+                }
+            } else {
+                showAlert('Failed to load bookings', 'danger');
+            }
+        } catch (error) {
+            console.error('Error loading bookings:', error);
+            showAlert('Failed to load bookings', 'danger');
+        }
+    }
+    
+    async function loadUserReviews() {
+        try {
+            const response = await fetch('/api/reviews/user', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const container = document.getElementById('reviewsContainer');
+                
+                if (data.reviews && data.reviews.length > 0) {
+                    container.innerHTML = data.reviews.map(review => `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5>${review.package.title}</h5>
+                                        <p class="text-muted">${review.package.destination}</p>
+                                        <div class="rating mb-2">${generateStars(review.rating)}</div>
+                                        <p>${review.comment || 'No comment provided'}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <small class="text-muted">${new Date(review.created_at).toLocaleDateString()}</small>
+                                        <br><br>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="editReview(${review.id})">Edit</button>
+                                        <button class="btn btn-outline-danger btn-sm ms-2" onclick="deleteReview(${review.id})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-muted">No reviews found</p>';
+                }
+            } else {
+                showAlert('Failed to load reviews', 'danger');
+            }
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            showAlert('Failed to load reviews', 'danger');
+        }
+    }
+    
+    function getStatusColor(status) {
+        switch(status) {
+            case 'pending': return 'warning';
+            case 'confirmed': return 'success';
+            case 'cancelled': return 'danger';
+            case 'completed': return 'info';
+            default: return 'secondary';
+        }
+    }
+    
+    function generateStars(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars += '<i class="fas fa-star text-warning"></i>';
+            } else {
+                stars += '<i class="far fa-star text-warning"></i>';
+            }
+        }
+        return stars;
+    }
+    
+    // Form submissions
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        
+        try {
+            const response = await fetch('/api/auth/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ username, email, phone_number: phone })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Profile updated successfully', 'success');
+                loadUserProfile();
+            } else {
+                showAlert(data.error || 'Failed to update profile', 'danger');
+            }
+        } catch (error) {
+            showAlert('Failed to update profile', 'danger');
+        }
+    });
+    
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+            showAlert('New passwords do not match', 'danger');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            showAlert('New password must be at least 6 characters long', 'danger');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ 
+                    current_password: currentPassword, 
+                    new_password: newPassword 
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showAlert('Password changed successfully', 'success');
+                document.getElementById('passwordForm').reset();
+            } else {
+                showAlert(data.error || 'Failed to change password', 'danger');
+            }
+        } catch (error) {
+            showAlert('Failed to change password', 'danger');
+        }
+    });
+    
+    // Action functions
+    async function viewBooking(bookingId) {
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                const booking = data.booking;
+                showBookingDetailsModal(booking);
+            } else {
+                showAlert(data.message || 'Failed to load booking details', 'danger');
+            }
+        } catch (error) {
+            showAlert('Failed to load booking details', 'danger');
+        }
+    }
+    
+    function showBookingDetailsModal(booking) {
+        const modalHtml = `
+            <div class="modal fade" id="bookingDetailsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Booking Details #${booking.id}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Booking Information</h6>
+                                    <p><strong>Package:</strong> ${booking.package.title}</p>
+                                    <p><strong>Destination:</strong> ${booking.package.destination}</p>
+                                    <p><strong>Duration:</strong> ${booking.package.duration_days} days</p>
+                                    <p><strong>Booking Date:</strong> ${new Date(booking.booking_date).toLocaleDateString()}</p>
+                                    <p><strong>Travelers:</strong> ${booking.number_of_travelers}</p>
+                                    <p><strong>Total Amount:</strong> ₹${booking.total_amount}</p>
+                                    <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(booking.status)}">${booking.status}</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Package Details</h6>
+                                    <p><strong>Max Travelers:</strong> ${booking.package.max_travelers}</p>
+                                    <p><strong>Available From:</strong> ${new Date(booking.package.available_from).toLocaleDateString()}</p>
+                                    <p><strong>Available To:</strong> ${new Date(booking.package.available_to).toLocaleDateString()}</p>
+                                    <p><strong>Price per Person:</strong> ₹${booking.package.price}</p>
+                                    <p><strong>Created:</strong> ${new Date(booking.created_at).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            ${booking.special_requests ? `
+                                <div class="mt-3">
+                                    <h6>Special Requests</h6>
+                                    <p>${booking.special_requests}</p>
+                                </div>
+                            ` : ''}
+                            <div class="mt-3">
+                                <h6>Package Description</h6>
+                                <p>${booking.package.description || 'No description available'}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            ${booking.status === 'pending' ? `
+                                <button type="button" class="btn btn-outline-danger" onclick="cancelBooking(${booking.id})">Cancel</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('bookingDetailsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+        modal.show();
+    }
+    
+    async function cancelBooking(bookingId) {
+        if (confirm('Are you sure you want to cancel this booking?')) {
+            try {
+                const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Booking cancelled successfully', 'success');
+                    loadUserBookings(); // Reload bookings
+                } else {
+                    showAlert(data.error || 'Failed to cancel booking', 'danger');
+                }
+            } catch (error) {
+                showAlert('Failed to cancel booking', 'danger');
+            }
+        }
+    }
+    
+    function editReview(id) {
+        showAlert('Edit review functionality coming soon', 'info');
+    }
+    
+    function deleteReview(id) {
+        if (confirm('Are you sure you want to delete this review?')) {
+            showAlert('Delete review functionality coming soon', 'info');
+        }
+    }
+    
+    async function loadUserWishlist() {
+        try {
+            const response = await fetch('/api/wishlist/', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const container = document.getElementById('wishlistContainer');
+                
+                if (data.wishlist && data.wishlist.length > 0) {
+                    container.innerHTML = data.wishlist.map(item => `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5>${item.package.title}</h5>
+                                        <p class="text-muted">${item.package.destination}</p>
+                                        <p><strong>Duration:</strong> ${item.package.duration_days} days</p>
+                                        <p><strong>Price:</strong> ₹${item.package.price}</p>
+                                        <p><strong>Added:</strong> ${new Date(item.added_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <a href="/package/${item.package.id}" class="btn btn-outline-primary btn-sm mb-2">View Package</a>
+                                        <br>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="removeFromWishlist(${item.package.id})">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-muted">No items in wishlist</p>';
+                }
+            } else {
+                showAlert('Failed to load wishlist', 'danger');
+            }
+        } catch (error) {
+            console.error('Error loading wishlist:', error);
+            showAlert('Failed to load wishlist', 'danger');
+        }
+    }
+    
+    async function removeFromWishlist(wishlistId) {
+        if (confirm('Are you sure you want to remove this item from your wishlist?')) {
+            try {
+                const response = await fetch(`/api/wishlist/${wishlistId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Removed from wishlist', 'success');
+                    loadUserWishlist(); // Reload wishlist
+                } else {
+                    showAlert(data.error || 'Failed to remove from wishlist', 'danger');
+                }
+            } catch (error) {
+                showAlert('Failed to remove from wishlist', 'danger');
+            }
+        }
+    }
+</script>
+{% endblock %}
